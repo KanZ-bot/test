@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theo Dõi Chế Độ Tăng Cân</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            text-align: center;
+            padding: 50px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="number"], input[type="date"], select, textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        button {
+            background-color: #ff69b4;
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #ff1493;
+        }
+        .result, .journal-entry {
+            margin-top: 20px;
+        }
+        .journal-entry {
+            background-color: #fff;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Theo Dõi Chế Độ Tăng Cân</h1>
+        <form id="bmi-form">
+            <label for="gender">Giới tính:</label>
+            <select id="gender" name="gender">
+                <option value="male">Nam</option>
+                <option value="female">Nữ</option>
+            </select>
+            <label for="weight">Cân nặng (kg):</label>
+            <input type="number" id="weight" name="weight" required>
+            <label for="height">Chiều cao (cm):</label>
+            <input type="number" id="height" name="height" required>
+            <button type="button" onclick="calculateBMI()">Tính BMI</button>
+        </form>
+        <div class="result" id="bmi-result"></div>
+
+        <h2>Nhật Ký Hàng Ngày</h2>
+        <textarea id="journal-entry" rows="4" placeholder="Viết nhật ký của bạn..."></textarea>
+        <button type="button" onclick="addJournalEntry()">Thêm Nhật Ký</button>
+        <div id="journal-container"></div>
+
+        <h2>Đếm Ngày Đến Sinh Nhật</h2>
+        <label for="birthday">Ngày sinh của bạn:</label>
+        <input type="date" id="birthday">
+        <button type="button" onclick="calculateDaysUntilBirthday()">Đếm Ngày</button>
+        <div class="result" id="birthday-result"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            loadJournalEntries();
+        });
+
+        function calculateBMI() {
+            var gender = document.getElementById('gender').value;
+            var weight = document.getElementById('weight').value;
+            var height = document.getElementById('height').value;
+
+            if (weight > 0 && height > 0) {
+                var heightInMeters = height / 100;
+                var bmi = weight / (heightInMeters * heightInMeters);
+                bmi = bmi.toFixed(2);
+
+                var resultText = 'Chỉ số BMI của bạn là ' + bmi + '.\n';
+                if (gender === 'male') {
+                    if (bmi < 18.5) {
+                        resultText += 'Bạn đang ở mức thiếu cân.';
+                    } else if (bmi >= 18.5 && bmi < 24.9) {
+                        resultText += 'Bạn đang ở mức cân nặng bình thường.';
+                    } else if (bmi >= 25 && bmi < 29.9) {
+                        resultText += 'Bạn đang ở mức thừa cân.';
+                    } else {
+                        resultText += 'Bạn đang ở mức béo phì.';
+                    }
+                } else {
+                    if (bmi < 18.5) {
+                        resultText += 'Bạn đang ở mức thiếu cân.';
+                    } else if (bmi >= 18.5 && bmi < 24.9) {
+                        resultText += 'Bạn đang ở mức cân nặng bình thường.';
+                    } else if (bmi >= 25 && bmi < 29.9) {
+                        resultText += 'Bạn đang ở mức thừa cân.';
+                    } else {
+                        resultText += 'Bạn đang ở mức béo phì.';
+                    }
+                }
+
+                document.getElementById('bmi-result').innerText = resultText;
+            } else {
+                document.getElementById('bmi-result').innerText = 'Vui lòng nhập cân nặng và chiều cao hợp lệ!';
+            }
+        }
+
+        function addJournalEntry() {
+            var journalEntryText = document.getElementById('journal-entry').value;
+            var date = new Date().toLocaleDateString();
+
+            if (journalEntryText.trim()) {
+                var journalContainer = document.getElementById('journal-container');
+                var journalEntry = document.createElement('div');
+                journalEntry.className = 'journal-entry';
+                journalEntry.innerHTML = '<strong>' + date + ':</strong><br>' + journalEntryText;
+
+                journalContainer.insertBefore(journalEntry, journalContainer.firstChild);
+                document.getElementById('journal-entry').value = '';
+
+                saveJournalEntry(date, journalEntryText);
+            } else {
+                alert('Vui lòng nhập nội dung nhật ký!');
+            }
+        }
+
+        function saveJournalEntry(date, text) {
+            var journalEntries = JSON.parse(localStorage.getItem('journalEntries')) || [];
+            journalEntries.push({ date: date, text: text });
+            localStorage.setItem('journalEntries', JSON.stringify(journalEntries));
+        }
+
+        function loadJournalEntries() {
+            var journalEntries = JSON.parse(localStorage.getItem('journalEntries')) || [];
+            var journalContainer = document.getElementById('journal-container');
+            journalEntries.forEach(function (entry) {
+                var journalEntry = document.createElement('div');
+                journalEntry.className = 'journal-entry';
+                journalEntry.innerHTML = '<strong>' + entry.date + ':</strong><br>' + entry.text;
+                journalContainer.appendChild(journalEntry);
+            });
+        }
+
+        function calculateDaysUntilBirthday() {
+            var birthdayInput = document.getElementById('birthday').value;
+            var today = new Date();
+            var birthday = new Date(birthdayInput);
+
+            // Set the birthday year to the current year
+            birthday.setFullYear(today.getFullYear());
+
+            // If the birthday has already passed this year, set the year to the next year
+            if (today > birthday) {
+                birthday.setFullYear(today.getFullYear() + 1);
+            }
+
+            var timeDifference = birthday - today;
+            var daysUntilBirthday = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+
+            document.getElementById('birthday-result').innerText = 'Còn ' + daysUntilBirthday + ' ngày nữa là đến sinh nhật của bạn!';
+        }
+    </script>
+</body>
+</html>
